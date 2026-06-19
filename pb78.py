@@ -1,154 +1,88 @@
 import streamlit as st
 from scipy.optimize import linprog
 
-# Configuración de página
-
+# ---------------- CONFIGURACIÓN ----------------
 st.set_page_config(
-page_title="Optimización de Producción",
-page_icon="📈",
-layout="wide"
+    page_title="Optimización de Imprenta",
+    page_icon="📄",
+    layout="wide"
 )
 
-# Encabezado
+st.title("📄 Optimización de Producción - Imprenta")
+st.markdown("Determina la mejor combinación de folletos y afiches para maximizar la ganancia.")
 
-st.title("📈 Optimización de Producción - Imprenta")
 st.markdown("---")
 
-st.write("""
-Esta aplicación permite determinar la cantidad óptima de **folletos** y **afiches**
-para maximizar la ganancia respetando las restricciones de producción.
-""")
+# ---------------- SIDEBAR ----------------
+st.sidebar.header("⚙️ Parámetros del problema")
 
-# Sidebar
+hojas_folleto = st.sidebar.number_input("Hojas por folleto", value=4, min_value=1)
+hojas_afiche = st.sidebar.number_input("Hojas por afiche", value=6, min_value=1)
 
-st.sidebar.header("⚙️ Parámetros")
+costo_folleto = st.sidebar.number_input("Costo por folleto ($)", value=15, min_value=1)
+costo_afiche = st.sidebar.number_input("Costo por afiche ($)", value=40, min_value=1)
 
-hojas_folleto = st.sidebar.number_input(
-"Hojas por folleto",
-min_value=1,
-value=4
-)
+ganancia_folleto = st.sidebar.number_input("Ganancia por folleto ($)", value=25, min_value=1)
+ganancia_afiche = st.sidebar.number_input("Ganancia por afiche ($)", value=50, min_value=1)
 
-hojas_afiche = st.sidebar.number_input(
-"Hojas por afiche",
-min_value=1,
-value=6
-)
+max_impresos = st.sidebar.number_input("Máximo de impresos", value=90, min_value=1)
+min_hojas = st.sidebar.number_input("Mínimo de hojas", value=391, min_value=1)
+presupuesto = st.sidebar.number_input("Presupuesto máximo ($)", value=2000, min_value=1)
 
-costo_folleto = st.sidebar.number_input(
-"Costo por folleto ($)",
-min_value=1,
-value=15
-)
+# ---------------- BOTÓN ----------------
+st.markdown("### 🚀 Ejecutar optimización")
 
-costo_afiche = st.sidebar.number_input(
-"Costo por afiche ($)",
-min_value=1,
-value=40
-)
+if st.button("Calcular solución óptima", use_container_width=True):
 
-ganancia_folleto = st.sidebar.number_input(
-"Ganancia por folleto ($)",
-min_value=1,
-value=25
-)
+    # ---------------- MODELO ----------------
+    c = [-ganancia_folleto, -ganancia_afiche]
 
-ganancia_afiche = st.sidebar.number_input(
-"Ganancia por afiche ($)",
-min_value=1,
-value=50
-)
+    A = [
+        [1, 1],
+        [costo_folleto, costo_afiche],
+        [-hojas_folleto, -hojas_afiche]
+    ]
 
-max_impresos = st.sidebar.number_input(
-"Máximo de impresos",
-min_value=1,
-value=90
-)
+    b = [
+        max_impresos,
+        presupuesto,
+        -min_hojas
+    ]
 
-min_hojas = st.sidebar.number_input(
-"Mínimo de hojas utilizadas",
-min_value=1,
-value=391
-)
-
-presupuesto = st.sidebar.number_input(
-"Presupuesto máximo ($)",
-min_value=1,
-value=2000
-)
-
-st.markdown("### 📋 Restricciones actuales")
-
-col1, col2, col3 = st.columns(3)
-
-with col1:
-st.info(f"Impresos ≤ {max_impresos}")
-
-with col2:
-st.info(f"Hojas ≥ {min_hojas}")
-
-with col3:
-st.info(f"Costo ≤ ${presupuesto}")
-
-# Botón principal
-
-if st.button("🚀 Calcular Solución Óptima", use_container_width=True):
-
-```
-c = [-ganancia_folleto, -ganancia_afiche]
-
-A = [
-    [1, 1],
-    [costo_folleto, costo_afiche],
-    [-hojas_folleto, -hojas_afiche]
-]
-
-b = [
-    max_impresos,
-    presupuesto,
-    -min_hojas
-]
-
-resultado = linprog(
-    c,
-    A_ub=A,
-    b_ub=b,
-    bounds=[(0, None), (0, None)],
-    method="highs"
-)
-
-if resultado.success:
-
-    folletos = round(resultado.x[0])
-    afiches = round(resultado.x[1])
-
-    st.success("✅ Solución encontrada")
-
-    c1, c2, c3 = st.columns(3)
-
-    c1.metric("📚 Folletos", folletos)
-    c2.metric("🖼️ Afiches", afiches)
-    c3.metric(
-        "💰 Ganancia Máxima",
-        f"${-resultado.fun:,.2f}"
+    resultado = linprog(
+        c,
+        A_ub=A,
+        b_ub=b,
+        bounds=[(0, None), (0, None)],
+        method="highs"
     )
 
-    st.markdown("### 📊 Verificación")
+    # ---------------- RESULTADOS ----------------
+    if resultado.success:
 
-    st.write(
-        f"**Impresos Totales:** {folletos + afiches}"
-    )
+        folletos = round(resultado.x[0])
+        afiches = round(resultado.x[1])
+        ganancia = -resultado.fun
 
-    st.write(
-        f"**Hojas Utilizadas:** {hojas_folleto*folletos + hojas_afiche*afiches}"
-    )
+        st.success("✅ Solución encontrada")
 
-    st.write(
-        f"**Costo Total:** ${costo_folleto*folletos + costo_afiche*afiches:,.0f}"
-    )
+        col1, col2, col3 = st.columns(3)
 
-else:
-    st.error(
-        "❌ No existe una solución factible para los parámetros seleccionados."
-    )
-```
+        with col1:
+            st.metric("📘 Folletos", folletos)
+
+        with col2:
+            st.metric("🖼️ Afiches", afiches)
+
+        with col3:
+            st.metric("💰 Ganancia máxima", f"${ganancia:,.0f}")
+
+        st.markdown("---")
+        st.subheader("📊 Verificación del modelo")
+
+        st.write(f"**Total de impresos:** {folletos + afiches}")
+        st.write(f"**Hojas utilizadas:** {hojas_folleto * folletos + hojas_afiche * afiches}")
+        st.write(f"**Costo total:** ${costo_folleto * folletos + costo_afiche * afiches:,.0f}")
+
+    else:
+        st.error("❌ No se encontró una solución factible con estos parámetros.")
