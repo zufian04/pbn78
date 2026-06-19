@@ -8,45 +8,57 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------- CSS PERSONALIZADO ----------------
+# ---------------- ESTILO / FONDO ----------------
 st.markdown("""
-    <style>
-        .main {
-            background-color: #0f172a;
-            color: white;
-        }
+<style>
+    .stApp {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
+        color: white;
+    }
 
-        h1 {
-            color: #38bdf8;
-            text-align: center;
-        }
+    h1, h2, h3 {
+        color: #38bdf8;
+        text-align: center;
+    }
 
-        .stButton>button {
-            background-color: #38bdf8;
-            color: black;
-            font-weight: bold;
-            border-radius: 10px;
-            height: 3em;
-            width: 100%;
-        }
+    .stButton>button {
+        background-color: #38bdf8;
+        color: black;
+        font-weight: bold;
+        border-radius: 10px;
+        height: 3em;
+        width: 100%;
+        transition: 0.3s;
+    }
 
-        .card {
-            background-color: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            box-shadow: 0px 2px 10px rgba(0,0,0,0.3);
-        }
-    </style>
+    .stButton>button:hover {
+        background-color: #0ea5e9;
+        transform: scale(1.02);
+    }
+
+    .card {
+        background-color: rgba(30, 41, 59, 0.85);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0px 2px 12px rgba(0,0,0,0.4);
+        text-align: center;
+    }
+
+    .stMetric {
+        background-color: rgba(15, 23, 42, 0.6);
+        padding: 10px;
+        border-radius: 10px;
+    }
+</style>
 """, unsafe_allow_html=True)
 
-# ---------------- HEADER ----------------
+# ---------------- TÍTULO ----------------
 st.title("📄 Optimización de Producción - Imprenta")
-st.markdown("### 📊 Maximiza la ganancia de folletos y afiches")
+st.markdown("### Maximiza la ganancia de folletos y afiches")
 st.markdown("---")
 
 # ---------------- SIDEBAR ----------------
-st.sidebar.header("⚙️ Parámetros")
+st.sidebar.header("⚙️ Parámetros del modelo")
 
 hojas_folleto = st.sidebar.number_input("Hojas por folleto", value=4, min_value=1)
 hojas_afiche = st.sidebar.number_input("Hojas por afiche", value=6, min_value=1)
@@ -66,6 +78,7 @@ st.markdown("## 🚀 Ejecutar optimización")
 
 if st.button("Calcular solución óptima"):
 
+    # ---------------- MODELO ----------------
     c = [-ganancia_folleto, -ganancia_afiche]
 
     A = [
@@ -88,6 +101,7 @@ if st.button("Calcular solución óptima"):
         method="highs"
     )
 
+    # ---------------- RESULTADO ----------------
     if resultado.success:
 
         folletos = round(resultado.x[0])
@@ -96,7 +110,6 @@ if st.button("Calcular solución óptima"):
 
         st.success("✅ Solución encontrada")
 
-        # ---------------- RESULTADOS VISUALES ----------------
         col1, col2, col3 = st.columns(3)
 
         with col1:
@@ -116,7 +129,7 @@ if st.button("Calcular solución óptima"):
 
         st.markdown("---")
 
-        # ---------------- DETALLES ----------------
+        # ---------------- VERIFICACIÓN ----------------
         st.subheader("📊 Verificación del modelo")
 
         st.info(f"📦 Total impresos: {folletos + afiches}")
@@ -124,4 +137,4 @@ if st.button("Calcular solución óptima"):
         st.info(f"💸 Costo total: ${costo_folleto * folletos + costo_afiche * afiches:,.0f}")
 
     else:
-        st.error("❌ No se encontró solución factible")
+        st.error("❌ No se encontró una solución factible")
