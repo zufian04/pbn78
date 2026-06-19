@@ -11,13 +11,11 @@ st.set_page_config(
 # ---------------- ESTILO ----------------
 st.markdown("""
 <style>
-    /* Fondo general */
     .stApp {
         background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
         color: white;
     }
 
-    /* Texto general en blanco */
     html, body, [class*="css"] {
         color: white !important;
     }
@@ -26,81 +24,88 @@ st.markdown("""
         color: white !important;
     }
 
-    /* Títulos */
-    h1, h2, h3 {
-        text-align: center;
-        color: #ffffff;
-    }
-
-    /* Botón */
     .stButton>button {
         background-color: #38bdf8;
         color: black;
         font-weight: bold;
         border-radius: 10px;
-        height: 3em;
         width: 100%;
-        transition: 0.3s;
     }
 
-    .stButton>button:hover {
-        background-color: #0ea5e9;
-        transform: scale(1.02);
-    }
-
-    /* Tarjetas */
     .card {
         background-color: rgba(30, 41, 59, 0.85);
-        padding: 20px;
+        padding: 15px;
         border-radius: 12px;
-        box-shadow: 0px 2px 12px rgba(0,0,0,0.4);
         text-align: center;
-        color: white;
-    }
-
-    /* Métricas */
-    .stMetric {
-        background-color: rgba(15, 23, 42, 0.6);
-        padding: 10px;
-        border-radius: 10px;
-        color: white;
-    }
-
-    /* Sidebar */
-    section[data-testid="stSidebar"] {
-        background-color: rgba(2, 6, 23, 0.9);
-        color: white;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------- TÍTULO ----------------
 st.title("📄 Optimización de Producción - Imprenta")
-st.markdown("### Maximiza la ganancia de folletos y afiches")
-st.markdown("---")
+
+st.markdown("### 🎯 Modelo con variación de costos ±50%")
+
+# ---------------- COSTOS BASE ----------------
+costo_f_base = 15
+costo_a_base = 40
+gan_f_base = 25
+gan_a_base = 50
 
 # ---------------- SIDEBAR ----------------
-st.sidebar.header("⚙️ Parámetros del modelo")
+st.sidebar.header("⚙️ Parámetros")
 
-hojas_folleto = st.sidebar.number_input("Hojas por folleto", value=4, min_value=1)
-hojas_afiche = st.sidebar.number_input("Hojas por afiche", value=6, min_value=1)
+# Hojas
+hojas_folleto = st.sidebar.number_input("Hojas por folleto", 1, value=4)
+hojas_afiche = st.sidebar.number_input("Hojas por afiche", 1, value=6)
 
-costo_folleto = st.sidebar.number_input("Costo por folleto ($)", value=15, min_value=1)
-costo_afiche = st.sidebar.number_input("Costo por afiche ($)", value=40, min_value=1)
+# 🔥 COSTOS con ±50%
+costo_folleto = st.sidebar.slider(
+    "Costo folleto (±50%)",
+    min_value=float(costo_f_base * 0.5),
+    max_value=float(costo_f_base * 1.5),
+    value=float(costo_f_base)
+)
 
-ganancia_folleto = st.sidebar.number_input("Ganancia por folleto ($)", value=25, min_value=1)
-ganancia_afiche = st.sidebar.number_input("Ganancia por afiche ($)", value=50, min_value=1)
+costo_afiche = st.sidebar.slider(
+    "Costo afiche (±50%)",
+    min_value=float(costo_a_base * 0.5),
+    max_value=float(costo_a_base * 1.5),
+    value=float(costo_a_base)
+)
 
-max_impresos = st.sidebar.number_input("Máximo de impresos", value=90, min_value=1)
-min_hojas = st.sidebar.number_input("Mínimo de hojas", value=391, min_value=1)
-presupuesto = st.sidebar.number_input("Presupuesto máximo ($)", value=2000, min_value=1)
+# 🔥 GANANCIAS con ±50%
+ganancia_folleto = st.sidebar.slider(
+    "Ganancia folleto (±50%)",
+    min_value=float(gan_f_base * 0.5),
+    max_value=float(gan_f_base * 1.5),
+    value=float(gan_f_base)
+)
+
+ganancia_afiche = st.sidebar.slider(
+    "Ganancia afiche (±50%)",
+    min_value=float(gan_a_base * 0.5),
+    max_value=float(gan_a_base * 1.5),
+    value=float(gan_a_base)
+)
+
+# Restricciones
+max_impresos = st.sidebar.number_input("Máx impresos", 1, value=90)
+min_hojas = st.sidebar.number_input("Mín hojas", 1, value=391)
+presupuesto = st.sidebar.number_input("Presupuesto", 1, value=2000)
+
+# Límites de producción
+st.sidebar.subheader("📌 Límites")
+
+min_folletos = st.sidebar.number_input("Mín folletos", 0, value=5)
+max_folletos = st.sidebar.number_input("Máx folletos", 1, value=60)
+
+min_afiches = st.sidebar.number_input("Mín afiches", 0, value=0)
+max_afiches = st.sidebar.number_input("Máx afiches", 1, value=80)
 
 # ---------------- BOTÓN ----------------
-st.markdown("## 🚀 Ejecutar optimización")
+if st.button("🚀 Calcular solución óptima"):
 
-if st.button("Calcular solución óptima"):
-
-    # ---------------- MODELO ----------------
     c = [-ganancia_folleto, -ganancia_afiche]
 
     A = [
@@ -115,20 +120,23 @@ if st.button("Calcular solución óptima"):
         -min_hojas
     ]
 
+    bounds = [
+        (min_folletos, max_folletos),
+        (min_afiches, max_afiches)
+    ]
+
     resultado = linprog(
         c,
         A_ub=A,
         b_ub=b,
-        bounds=[(0, None), (0, None)],
+        bounds=bounds,
         method="highs"
     )
 
-    # ---------------- RESULTADO ----------------
     if resultado.success:
 
-        folletos = round(resultado.x[0])
-        afiches = round(resultado.x[1])
-        ganancia = -resultado.fun
+        x = round(resultado.x[0])
+        y = round(resultado.x[1])
 
         st.success("✅ Solución encontrada")
 
@@ -136,27 +144,18 @@ if st.button("Calcular solución óptima"):
 
         with col1:
             st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.metric("📘 Folletos", folletos)
+            st.metric("Folletos", x)
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col2:
             st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.metric("🖼️ Afiches", afiches)
+            st.metric("Afiches", y)
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col3:
             st.markdown('<div class="card">', unsafe_allow_html=True)
-            st.metric("💰 Ganancia", f"${ganancia:,.0f}")
+            st.metric("Ganancia", f"${-resultado.fun:,.0f}")
             st.markdown('</div>', unsafe_allow_html=True)
 
-        st.markdown("---")
-
-        # ---------------- VERIFICACIÓN ----------------
-        st.subheader("📊 Verificación del modelo")
-
-        st.info(f"📦 Total impresos: {folletos + afiches}")
-        st.info(f"📄 Hojas utilizadas: {hojas_folleto * folletos + hojas_afiche * afiches}")
-        st.info(f"💸 Costo total: ${costo_folleto * folletos + costo_afiche * afiches:,.0f}")
-
     else:
-        st.error("❌ No se encontró una solución factible")
+        st.error("❌ No hay solución con estos parámetros")
