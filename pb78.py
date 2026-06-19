@@ -8,19 +8,31 @@ st.set_page_config(
     layout="wide"
 )
 
-# ---------------- ESTILO / FONDO ----------------
+# ---------------- ESTILO ----------------
 st.markdown("""
 <style>
+    /* Fondo general */
     .stApp {
         background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #0f172a 100%);
         color: white;
     }
 
-    h1, h2, h3 {
-        color: #38bdf8;
-        text-align: center;
+    /* Texto general en blanco */
+    html, body, [class*="css"] {
+        color: white !important;
     }
 
+    h1, h2, h3, p, div {
+        color: white !important;
+    }
+
+    /* Títulos */
+    h1, h2, h3 {
+        text-align: center;
+        color: #ffffff;
+    }
+
+    /* Botón */
     .stButton>button {
         background-color: #38bdf8;
         color: black;
@@ -36,18 +48,28 @@ st.markdown("""
         transform: scale(1.02);
     }
 
+    /* Tarjetas */
     .card {
         background-color: rgba(30, 41, 59, 0.85);
         padding: 20px;
         border-radius: 12px;
         box-shadow: 0px 2px 12px rgba(0,0,0,0.4);
         text-align: center;
+        color: white;
     }
 
+    /* Métricas */
     .stMetric {
         background-color: rgba(15, 23, 42, 0.6);
         padding: 10px;
         border-radius: 10px;
+        color: white;
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: rgba(2, 6, 23, 0.9);
+        color: white;
     }
 </style>
 """, unsafe_allow_html=True)
