@@ -44,58 +44,24 @@ st.markdown("""
 # ---------------- TÍTULO ----------------
 st.title("📄 Optimización de Producción - Imprenta")
 
-st.markdown("### 🎯 Modelo con variación de costos ±50%")
-
-# ---------------- COSTOS BASE ----------------
-costo_f_base = 15
-costo_a_base = 40
-gan_f_base = 25
-gan_a_base = 50
-
 # ---------------- SIDEBAR ----------------
 st.sidebar.header("⚙️ Parámetros")
 
-# Hojas
 hojas_folleto = st.sidebar.number_input("Hojas por folleto", 1, value=4)
 hojas_afiche = st.sidebar.number_input("Hojas por afiche", 1, value=6)
 
-# 🔥 COSTOS con ±50%
-costo_folleto = st.sidebar.slider(
-    "Costo folleto (±50%)",
-    min_value=float(costo_f_base * 0.5),
-    max_value=float(costo_f_base * 1.5),
-    value=float(costo_f_base)
-)
+costo_folleto = st.sidebar.number_input("Costo folleto", 1, value=15)
+costo_afiche = st.sidebar.number_input("Costo afiche", 1, value=40)
 
-costo_afiche = st.sidebar.slider(
-    "Costo afiche (±50%)",
-    min_value=float(costo_a_base * 0.5),
-    max_value=float(costo_a_base * 1.5),
-    value=float(costo_a_base)
-)
+ganancia_folleto = st.sidebar.number_input("Ganancia folleto", 1, value=25)
+ganancia_afiche = st.sidebar.number_input("Ganancia afiche", 1, value=50)
 
-# 🔥 GANANCIAS con ±50%
-ganancia_folleto = st.sidebar.slider(
-    "Ganancia folleto (±50%)",
-    min_value=float(gan_f_base * 0.5),
-    max_value=float(gan_f_base * 1.5),
-    value=float(gan_f_base)
-)
-
-ganancia_afiche = st.sidebar.slider(
-    "Ganancia afiche (±50%)",
-    min_value=float(gan_a_base * 0.5),
-    max_value=float(gan_a_base * 1.5),
-    value=float(gan_a_base)
-)
-
-# Restricciones
 max_impresos = st.sidebar.number_input("Máx impresos", 1, value=90)
 min_hojas = st.sidebar.number_input("Mín hojas", 1, value=391)
 presupuesto = st.sidebar.number_input("Presupuesto", 1, value=2000)
 
-# Límites de producción
-st.sidebar.subheader("📌 Límites")
+# ---------------- NUEVOS LÍMITES ----------------
+st.sidebar.subheader("📌 Límites de producción")
 
 min_folletos = st.sidebar.number_input("Mín folletos", 0, value=5)
 max_folletos = st.sidebar.number_input("Máx folletos", 1, value=60)
@@ -104,10 +70,12 @@ min_afiches = st.sidebar.number_input("Mín afiches", 0, value=0)
 max_afiches = st.sidebar.number_input("Máx afiches", 1, value=80)
 
 # ---------------- BOTÓN ----------------
-if st.button("🚀 Calcular solución óptima"):
+if st.button("🚀 Calcular solución"):
 
+    # OBJETIVO
     c = [-ganancia_folleto, -ganancia_afiche]
 
+    # RESTRICCIONES <=
     A = [
         [1, 1],
         [costo_folleto, costo_afiche],
@@ -120,6 +88,7 @@ if st.button("🚀 Calcular solución óptima"):
         -min_hojas
     ]
 
+    # bounds (AQUÍ ESTÁ LA CLAVE)
     bounds = [
         (min_folletos, max_folletos),
         (min_afiches, max_afiches)
@@ -158,4 +127,4 @@ if st.button("🚀 Calcular solución óptima"):
             st.markdown('</div>', unsafe_allow_html=True)
 
     else:
-        st.error("❌ No hay solución con estos parámetros")
+        st.error("❌ No hay solución con esos límites")
